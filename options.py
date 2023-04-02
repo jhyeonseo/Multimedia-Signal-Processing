@@ -13,7 +13,7 @@ class AudioOptions:
         self.parser.add_argument("--rate",
                                  type=int,
                                  help="sampling rate",
-                                 default=16000)
+                                 default=48000)
         self.parser.add_argument("--format",
                                  type=int,
                                  help="formate",
@@ -25,7 +25,7 @@ class AudioOptions:
         self.parser.add_argument("--chunk",
                                  type=int,
                                  help="size of audio buffer",
-                                 default=1600)  
+                                 default=4800)  
         self.parser.add_argument("--device",
                                  type=int,
                                  help="input device index",

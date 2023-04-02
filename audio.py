@@ -6,9 +6,12 @@ class AudioManager:
     def __init__(self,options):
         self.opt=options
         self.filter=Filter()
-        self.past_data=np.zeros(self.filter.tap-1,dtype=self.opt.dtype)
+        #self.past_data=np.zeros(self.filter.tap-1,dtype=self.opt.dtype)
+        self.aheadL = np.zeros(self.opt.chunk, dtype=np.int16)
+        self.aheadR = np.zeros(self.opt.chunk, dtype=np.int16)       
         
-    def process(self,input):
+    def process(self, input, distance=1, angle=0):
+        '''
         # 과거 input의 마지막 data를 처음 부분에 연결
         in_data = np.concatenate((self.past_data,np.fromstring(input,dtype=self.opt.dtype)))
         # 현재 input의 마지막 data를 저장
@@ -18,7 +21,55 @@ class AudioManager:
             out_data = np.convolve(in_data,self.filter.kernel,mode='valid').astype(self.opt.dtype)
         else:
             out_data = in_data
+        '''
+        in_data = np.fromstring(input, dtype=self.opt.dtype)
+        out_data = self.sound_rendering(in_data, distance=distance, angle=np.pi*float(angle)/180)
+            
         return out_data.tostring()
+    
+    def sound_rendering(self, signal, distance, angle, head=10):
+        eardistance = 2 * head * 0.01 * np.abs(np.sin(angle))
+        delay = int(eardistance * self.opt.rate/339)
+        max_delay = int(self.opt.rate*2*head*.01/339)
+        if max_delay > self.opt.chunk:
+            max_delay = self.opt.chunk
+        out = np.zeros(len(signal), dtype=np.int16)
+
+        if angle >= 0:
+            for i in range(int(len(signal)/2)):
+                if i < delay:
+                    out[i*2] = self.aheadL[max_delay - delay + i]
+                else:
+                    out[i*2] = signal[(i-delay)*2]
+                    
+                out[i*2] = int(out[i*2]*(distance/(distance+eardistance)))
+                out[i*2+1] = signal[i*2]
+        else:
+            for i in range(int(len(signal)/2)):
+                if i < delay:
+                    out[i*2+1] = self.aheadR[max_delay - delay + i]
+                else:
+                    out[i*2+1] = signal[(i-delay)*2]
+                out[i*2+1] = int(out[i*2+1]*(distance/(distance+eardistance)))
+                out[i*2] = signal[i*2]
+                
+        for i in range(max_delay):
+            self.aheadL[i] = signal[(int(len(signal)/2) - max_delay + i)*2]
+            self.aheadR[i] = signal[(int(len(signal)/2) - max_delay + i)*2]
+        
+        return out
+    
+    def select_channel(self, signal, ch='right'):
+        out = np.zeros(int(len(signal)/2), dtype=np.int16)
+        for i in range(self.opt.chunk):
+            if ch=='left':
+                out[i*2]=signal[i*2]
+                out[i*2+1]=0
+            else:
+                out[i*2]=0
+                out[i*2+1]=signal[i*2]
+                
+        return out
 
     
     def change(self):
