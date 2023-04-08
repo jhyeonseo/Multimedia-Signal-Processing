@@ -17,7 +17,7 @@ stream = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, input=True,frames
 stream_OUT = p.open(format=pyaudio.paInt16, channels=1, rate=RATE, output=True)
 r=sr.Recognizer()
 
-openai.api_key = "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"
+openai.api_key = "Your API KEY"
 prompt = []
 src = input("Type your language: ")
 os.system('cls' if os.name == 'nt' else 'clear')
