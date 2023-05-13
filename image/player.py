@@ -3,21 +3,22 @@ import numpy as np
 import filter
 import noise
 import fft_filter
+import histogram
 
 
 FILTER = fft_filter.FFT_FILTER()
 cap = cv2.VideoCapture("./data/people2.mp4")
+cap = cv2.VideoCapture(0, cv2.CAP_MSMF)
+cap.set(cv2.CAP_PROP_FRAME_WIDTH, 512)
+cap.set(cv2.CAP_PROP_FRAME_HEIGHT, 512)
+
 
 while True:
     ret, frame = cap.read()
     if ret:
-        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2GRAY)/255
-        frame = cv2.resize(frame, (512, 512))
-        
-
-        i_gray, H = FILTER.filter_ft(frame, 0.25)
-        cframe = np.hstack((frame, i_gray, H))
-        cv2.imshow('2D-FFT', cframe)
+        cframe = histogram.plot(frame)
+        cv2.imshow('Image', frame)
+        cv2.imshow('Histogram', cframe)
         key = cv2.waitKey(33)
         if key == ord('q'):
             break
